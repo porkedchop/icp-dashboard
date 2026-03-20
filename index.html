@@ -73,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
   <span class="text-slate-600 font-normal">ICP Dashboard</span>
   <span class="text-slate-600 text-xs">v4 · Mar 2026</span>
   <div class="flex-1"></div>
+  <div class="flex gap-1 bg-slate-800 rounded-lg p-1">
+    <button onclick="showPage('rankings')" id="tab-rankings" class="tab-btn-nav text-xs px-3 py-1 rounded-md bg-white text-slate-800 font-medium transition-all">📊 Rankings</button>
+    <button onclick="showPage('model')" id="tab-model" class="tab-btn-nav text-xs px-3 py-1 rounded-md text-slate-400 hover:text-white transition-all">📐 Model</button>
+  </div>
   <div id="nav-stats" class="hidden items-center gap-5 text-xs">
     <span id="stat-shown" class="text-white font-semibold"></span>
     <span id="stat-top" class="text-emerald-400"></span>
@@ -86,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </nav>
 
 <!-- LAYOUT -->
+<div id="page-rankings">
 <div class="flex" style="padding-top:44px; height:100vh;">
 
   <!-- SIDEBAR -->
@@ -274,6 +279,239 @@ document.addEventListener('DOMContentLoaded', () => {
   </main>
 </div>
 
+</div><!-- /page-rankings -->
+
+<!-- MODEL PAGE -->
+<div id="page-model" class="hidden overflow-auto bg-slate-50" style="margin-top:44px; height:calc(100vh - 44px);">
+  <div class="max-w-5xl mx-auto px-8 py-12 space-y-16">
+
+    <!-- Hero -->
+    <div class="text-center">
+      <div class="inline-flex items-center gap-2 bg-slate-900 text-white text-xs px-4 py-1.5 rounded-full mb-6 font-medium tracking-wide">ICP SCORING MODEL v4 · MARCH 2026</div>
+      <h1 class="text-4xl font-bold text-slate-900 mb-4">How We Rank 824 Companies</h1>
+      <p class="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed">A composite score that tells the sales team who to call first — ranked by Mac fleet likelihood, US office presence, employee volume, and financial maturity to support a structured ITAD program.</p>
+      <div class="grid grid-cols-4 gap-4 mt-10 max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center"><div class="text-3xl font-bold text-slate-900">824</div><div class="text-xs text-slate-400 mt-1">Companies Scored</div></div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center"><div class="text-3xl font-bold text-slate-900">3,340+</div><div class="text-xs text-slate-400 mt-1">Brave Searches</div></div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center"><div class="text-3xl font-bold text-slate-900">213</div><div class="text-xs text-slate-400 mt-1">Passed 500+ Filter</div></div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center"><div class="text-3xl font-bold text-slate-900">Top 25</div><div class="text-xs text-slate-400 mt-1">ACV Validated</div></div>
+      </div>
+    </div>
+
+    <!-- Score Architecture -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Score Architecture</h2>
+      <p class="text-slate-500 mb-8">Every company gets two components. ICP Fit measures structural alignment today. Breakout ε captures explosive upside for companies that look small but are growing fast. The total is uncapped — the best companies can exceed 100.</p>
+      <div class="flex items-stretch gap-4">
+        <div class="flex-1 bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="text-4xl font-black text-slate-900 mb-1">0 – 85</div>
+          <div class="text-sm font-semibold text-slate-700 mb-3">ICP Fit</div>
+          <div class="text-xs text-slate-500 leading-relaxed mb-4">Nine dimensions measuring structural alignment with Revivn's ITAD model. Hardware, headcount, industry, tech stack, location, financial maturity, office density, and more.</div>
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 text-xs"><div class="bg-emerald-400 rounded-full" style="width:100%;height:6px"></div><span class="text-slate-500 w-12 flex-shrink-0">16 pts ×2</span></div>
+            <div class="flex items-center gap-2 text-xs"><div class="bg-blue-400 rounded-full" style="width:88%;height:6px"></div><span class="text-slate-500 w-12 flex-shrink-0">14 pts</span></div>
+            <div class="flex items-center gap-2 text-xs"><div class="bg-slate-300 rounded-full" style="width:50%;height:6px"></div><span class="text-slate-500 w-12 flex-shrink-0">8 pts ×5</span></div>
+            <div class="flex items-center gap-2 text-xs"><div class="bg-slate-200 rounded-full" style="width:38%;height:6px"></div><span class="text-slate-500 w-12 flex-shrink-0">6 + 3 pts</span></div>
+          </div>
+        </div>
+        <div class="flex items-center text-2xl font-light text-slate-300 px-2">+</div>
+        <div class="flex-1 bg-amber-50 rounded-2xl border border-amber-200 p-6">
+          <div class="text-4xl font-black text-amber-600 mb-1">0 – 19</div>
+          <div class="text-sm font-semibold text-amber-700 mb-3">Breakout ε</div>
+          <div class="text-xs text-slate-500 leading-relaxed mb-4">Three upside signals for companies growing so fast the deal will be much larger in 24 months. The ε term captures what standard scoring misses about early-stage unicorns.</div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-amber-100"><span class="text-slate-600">Valuation Anomaly</span><span class="font-bold text-amber-600">10 pts</span></div>
+            <div class="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-amber-100"><span class="text-slate-600">Investor Quality</span><span class="font-bold text-amber-600">7 pts</span></div>
+            <div class="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-amber-100"><span class="text-slate-600">Category Creation</span><span class="font-bold text-amber-600">2 pts</span></div>
+          </div>
+        </div>
+        <div class="flex items-center text-2xl font-light text-slate-300 px-2">=</div>
+        <div class="flex-1 bg-slate-900 rounded-2xl p-6 text-white">
+          <div class="text-4xl font-black mb-1">Uncapped</div>
+          <div class="text-sm font-semibold text-slate-300 mb-3">Total Score</div>
+          <div class="text-xs text-slate-400 leading-relaxed mb-4">Top-tier breakout companies can exceed 100. The Breakout ε is additive upside, not a substitute for ICP Fit.</div>
+          <div class="space-y-1.5 text-xs">
+            <div class="flex items-center justify-between"><span class="text-slate-400">Top ICP</span><span class="text-emerald-400 font-semibold">80+</span></div>
+            <div class="flex items-center justify-between"><span class="text-slate-400">Strong ICP</span><span class="text-blue-400 font-semibold">65–79</span></div>
+            <div class="flex items-center justify-between"><span class="text-slate-400">Moderate ICP</span><span class="text-amber-400 font-semibold">50–64</span></div>
+            <div class="flex items-center justify-between"><span class="text-slate-400">Breakout Watch ⚡</span><span class="text-amber-400 font-semibold">Top 25</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Where the Data Comes From</h2>
+      <p class="text-slate-500 mb-8">Four data layers. Research runs first, then CRM and manual overrides fill gaps. The principle: never penalize a company for a data gap we created.</p>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="text-2xl mb-3">🔍</div>
+          <div class="font-semibold text-slate-800 mb-1">Brave Web Search</div>
+          <div class="text-xs text-slate-400 font-mono mb-3">Layer 1 — Primary Research</div>
+          <p class="text-sm text-slate-500 leading-relaxed">4 targeted searches per company: <strong class="text-slate-700">(1)</strong> general company info — employees, HQ, valuation, funding. <strong class="text-slate-700">(2)</strong> IT job listings — "Jamf admin" or "Mosyle engineer" signals confirm the Mac MDM tool. <strong class="text-slate-700">(3)</strong> Glassdoor/Reddit reviews — employees mentioning Mac vs Windows laptops. <strong class="text-slate-700">(4)</strong> Stackshare/tech stack — Okta, Google Workspace, identity tools.</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="text-2xl mb-3">🤖</div>
+          <div class="font-semibold text-slate-800 mb-1">Claude AI (Haiku)</div>
+          <div class="text-xs text-slate-400 font-mono mb-3">Layer 1 — Extraction</div>
+          <p class="text-sm text-slate-500 leading-relaxed">After each Brave search, Claude Haiku reads all results and extracts structured fields: employee count, HQ city, founding year, valuation, funding round, hardware fleet, MDM tool, productivity suite, work model, growth rates, and key investors. Replaces hours of manual research per company.</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="text-2xl mb-3">🏢</div>
+          <div class="font-semibold text-slate-800 mb-1">Salesforce CRM</div>
+          <div class="text-xs text-slate-400 font-mono mb-3">Layer 2 — CRM Backfill</div>
+          <p class="text-sm text-slate-500 leading-relaxed">Revivn's Salesforce export provides ZoomInfo employee counts, US employee percentages, billing city/state for HQ, account owners, and opportunity stages for every account ever touched. Only fills nulls — research data always takes priority. Also carries CRM stage and owner for any known account.</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="text-2xl mb-3">✏️</div>
+          <div class="font-semibold text-slate-800 mb-1">Manual Overrides</div>
+          <div class="text-xs text-slate-400 font-mono mb-3">Layers 3 & 4 — Ground Truth</div>
+          <p class="text-sm text-slate-500 leading-relaxed">High-confidence corrections for 25+ well-known companies where web research returns stale data. <strong class="text-slate-700">Headcount overrides</strong> (e.g., OpenAI 3,000 · Anthropic 3,800 · Anduril 3,500) always win when our verified number exceeds research. <strong class="text-slate-700">Work model overrides</strong> correct inferred policies for companies with publicly confirmed stances.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 Dimensions -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">The 9 ICP Fit Dimensions</h2>
+      <p class="text-slate-500 mb-8">Each dimension scores one aspect of structural fit. Weights were set based on Revivn's actual top 25 ACV accounts and the ITAD business model — device pickup volume, Mac likelihood, and operational reachability.</p>
+      <div class="grid grid-cols-3 gap-4">
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">👥</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">16 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Employee Count</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-emerald-400 h-1.5 rounded-full" style="width:100%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">Sweet spot: 1,000–8,000. Fast-growing sub-2,000 companies get a 2.5–4× forward-looking multiplier. <strong class="text-slate-600">International HQ companies are scored on US-adjusted headcount</strong> — only US employees represent actual pickup volume for Revivn.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">🏭</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">16 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Industry Vertical</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-emerald-400 h-1.5 rounded-full" style="width:100%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">Mac adoption varies from ~95% (AI/ML) to ~5% (Construction). 40+ industry categories mapped to 4 tiers based on Revivn's account history. Tier 1 (AI/ML, SaaS) = 16 pts. Disqualified sectors (Retail, Oil & Gas) = 2 pts — not zero, since exceptions exist.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">🔧</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">14 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Tech Stack</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-blue-400 h-1.5 rounded-full" style="width:88%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">The strongest confirmed signal. <strong class="text-slate-600">Jamf, Mosyle, and Kandji are Mac-only MDM tools</strong> — if a company uses them, we know they have Macs (+7). Okta correlates 90%+ with Mac orgs (+4). Google Workspace is an 85-90% Mac indicator (+3). Microsoft 365 = Windows signal (0).</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">📍</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">8 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">HQ Location</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-slate-400 h-1.5 rounded-full" style="width:50%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">Revivn's drivers operate primarily out of SF and NYC. SF/NYC = 8/8. Secondary hubs (Seattle, Austin, Boston) = 5/8. Other US = 3/8. Near-international (Toronto, London) = 1/8. International = 0/8. Revivn's ITAD operations are US-only.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">💰</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">8 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Financial Maturity</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-slate-400 h-1.5 rounded-full" style="width:50%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">Structured ITAD programs require capital and procurement infrastructure. Public companies and unicorns ($10B+) = 8/8. <strong class="text-slate-600">Public and private late-stage score identically</strong> — a $10B private unicorn is no less financially mature than a public company of the same size.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">🌎</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">8 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">NA Concentration</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-slate-400 h-1.5 rounded-full" style="width:50%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed"><strong class="text-slate-600">Absolute US employee count, not percentage.</strong> Adobe at 30% US sounds bad — that's still 13,000+ US employees. We compute global × US% to get the real pickup volume. 450+ US employees = 8/8. Threshold-based scoring down to &lt;50 US employees = 1/8.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 border-l-4 border-l-orange-300">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">🏢</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">8 pts + cap</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Office Presence</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-slate-400 h-1.5 rounded-full" style="width:50%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed"><strong class="text-slate-600">The hardest constraint in the model.</strong> Revivn sends drivers to bulk-pick up hardware from offices. Fully remote = devices at 500 employee homes — individual pickups destroy unit economics. Fully remote companies are capped at 45/85 ICP Fit regardless of all other scores. Remote-first = capped at 60/85.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">🖥️</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">6 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Hardware Fleet</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-slate-300 h-1.5 rounded-full" style="width:38%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">Confirmed fleet data from Jamf job postings, IT admin discussions, and review sites. <strong class="text-slate-600">Intentionally kept low at 6 pts</strong> — only 30% of companies have public hardware data. Weighting it higher would penalize the 70% we simply don't have data on. Mac likelihood flows through Tech Stack and Industry instead.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3"><span class="text-lg">📅</span><span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-full">3 pts</span></div>
+          <div class="font-semibold text-slate-800 mb-1">Company Age</div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3"><div class="bg-slate-200 h-1.5 rounded-full" style="width:19%"></div></div>
+          <p class="text-xs text-slate-500 leading-relaxed">Post-2000 companies built IT infrastructure in the Mac era — Jamf, Okta, cloud-native from day one. Pre-1985 companies carry Windows-legacy risk from decades of Dell/Lenovo procurement relationships. A tiebreaker dimension, not a disqualifier.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Breakout ε -->
+    <div class="bg-amber-50 rounded-3xl border border-amber-200 p-8">
+      <div class="flex items-start gap-6">
+        <div class="flex-shrink-0">
+          <div class="text-5xl">⚡</div>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-2xl font-bold text-amber-900 mb-2">Breakout ε — The Forward-Looking Signal</h2>
+          <p class="text-amber-700 mb-6 leading-relaxed">Standard ICP scoring systematically underrates companies that look "too small" today but are on a trajectory to be massive accounts within 24 months. Breakout ε fixes this. OpenAI in 2021 would have scored ~40 ICP Fit (only 500 employees) — but their Breakout would be 19/19. The ε term captures what valuation already knows.</p>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl border border-amber-200 p-4">
+              <div class="text-2xl font-black text-amber-600 mb-1">10 pts</div>
+              <div class="font-semibold text-slate-800 mb-2">Valuation Anomaly</div>
+              <p class="text-xs text-slate-500">A $5B company with 500 employees means VCs are pricing in 10× current scale. Scored on valuation tiers: $10B+ = 10 pts, $3B+ = 8, $1B+ = 6. Also computed from the <code class="bg-amber-50 px-1 rounded">current_valuation</code> field as a fallback — data gaps don't suppress high-valuation companies.</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-amber-200 p-4">
+              <div class="text-2xl font-black text-amber-600 mb-1">7 pts</div>
+              <div class="font-semibold text-slate-800 mb-2">Investor Quality</div>
+              <p class="text-xs text-slate-500">Tier-1 backers (a16z, Sequoia, Benchmark, Microsoft, Google) are the most reliable leading indicator of a company reaching the 1,000–5,000 employee sweet spot. Every single one of Revivn's top 25 ACV accounts has tier-1 investors. This is the strongest correlation we found.</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-amber-200 p-4">
+              <div class="text-2xl font-black text-amber-600 mb-1">2 pts</div>
+              <div class="font-semibold text-slate-800 mb-2">Category Creation</div>
+              <p class="text-xs text-slate-500">Companies defining new markets (Anthropic in foundation models, Wiz in cloud security) have compounding growth moats. They're not competing for market share — they're creating it. Small signal, but meaningful for breaking ties at the top.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Industry Tiers -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Industry Tier Map</h2>
+      <p class="text-slate-500 mb-6">Mac adoption by sector — based on Revivn's account history, public IT surveys, and MDM tool market data. The key distinction: Defense Tech startups (Anduril, Applied Intuition) are Tier 2 — they're software-forward Mac companies. Traditional defense contractors are Tier 4 — Windows legacy.</p>
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead><tr class="bg-slate-50 border-b border-slate-200 text-xs text-slate-400 uppercase tracking-wider"><th class="px-5 py-3 text-left">Tier</th><th class="px-5 py-3 text-left">Score</th><th class="px-5 py-3 text-left">Industries</th><th class="px-5 py-3 text-left">Mac Adoption</th></tr></thead>
+          <tbody>
+            <tr class="border-b border-slate-100"><td class="px-5 py-3"><span class="badge bg-emerald-100 text-emerald-700 text-xs">Tier 1</span></td><td class="px-5 py-3 font-bold text-emerald-600">16/16</td><td class="px-5 py-3 text-slate-600">AI/ML, B2B SaaS, Cloud, MarTech, Data Infrastructure</td><td class="px-5 py-3 text-slate-500">~90–98%</td></tr>
+            <tr class="border-b border-slate-100"><td class="px-5 py-3"><span class="badge bg-blue-100 text-blue-700 text-xs">Tier 2</span></td><td class="px-5 py-3 font-bold text-blue-600">13/16</td><td class="px-5 py-3 text-slate-600">Security, FinTech, DevTools, Defense Tech (startups), Space Tech</td><td class="px-5 py-3 text-slate-500">~70–85%</td></tr>
+            <tr class="border-b border-slate-100"><td class="px-5 py-3"><span class="badge bg-amber-100 text-amber-700 text-xs">Tier 3</span></td><td class="px-5 py-3 font-bold text-amber-600">10/16</td><td class="px-5 py-3 text-slate-600">HealthTech, Media/Streaming, AdTech, HR Tech, eCommerce</td><td class="px-5 py-3 text-slate-500">~40–65%</td></tr>
+            <tr class="border-b border-slate-100"><td class="px-5 py-3"><span class="badge bg-slate-100 text-slate-500 text-xs">Tier 4</span></td><td class="px-5 py-3 font-bold text-slate-500">5/16</td><td class="px-5 py-3 text-slate-600">Manufacturing, Logistics, Healthcare, Government, BioTech, CleanTech, EdTech</td><td class="px-5 py-3 text-slate-500">~15–35%</td></tr>
+            <tr><td class="px-5 py-3"><span class="badge bg-red-100 text-red-500 text-xs">DQ</span></td><td class="px-5 py-3 font-bold text-red-400">2/16</td><td class="px-5 py-3 text-slate-600">Retail, Advertising, Architecture, Hospitality, Oil & Gas, Construction</td><td class="px-5 py-3 text-slate-500">&lt;10%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Limitations -->
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Known Limitations</h2>
+      <p class="text-slate-500 mb-6">The model is honest about what it doesn't know. These are the areas where manual enrichment would most improve precision.</p>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-start gap-3"><span class="text-orange-400 text-lg mt-0.5">⚠️</span><div><div class="font-medium text-slate-700 mb-1">Hardware data: only 30% confirmed</div><p class="text-xs text-slate-500">70% of companies use the inference engine (industry + MDM proxy signals). Confirmed Jamf/Mosyle data would move many inferred scores to confirmed.</p></div></div></div>
+        <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-start gap-3"><span class="text-orange-400 text-lg mt-0.5">⚠️</span><div><div class="font-medium text-slate-700 mb-1">Revenue/growth data: ~90% null</div><p class="text-xs text-slate-500">The growth multiplier only fires when YoY data was found. Many hyper-growth companies may be under-ranked because their growth rate wasn't in public search results.</p></div></div></div>
+        <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-start gap-3"><span class="text-orange-400 text-lg mt-0.5">⚠️</span><div><div class="font-medium text-slate-700 mb-1">Score compression at 82–88</div><p class="text-xs text-slate-500">Several companies cluster in this range. Tiebreak on: (a) data quality — fewer inferred fields = more reliable, (b) recency of funding, (c) current CRM stage.</p></div></div></div>
+        <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-start gap-3"><span class="text-orange-400 text-lg mt-0.5">⚠️</span><div><div class="font-medium text-slate-700 mb-1">International companies with US presence</div><p class="text-xs text-slate-500">Companies like Pennylane (Paris HQ, 144 US employees) are correctly down-ranked by the US-adjusted headcount model but still appear due to high Breakout ε. Treat as speculative targets.</p></div></div></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-xs text-slate-400 pb-4">
+      Revivn ICP Model v4 · March 2026 · Data collected March 18–19, 2026 · Validated against top 25 ACV accounts
+    </div>
+
+  </div>
+</div><!-- /page-model -->
+
 <!-- DETAIL MODAL -->
 <div id="modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6" onclick="if(event.target===this)closeModal()">
   <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
@@ -289,6 +527,19 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <script>
+
+// ─── Page switching ───────────────────────────────────────────────────────────
+function showPage(page) {
+  document.getElementById('page-rankings').style.display = page === 'rankings' ? 'block' : 'none';
+  document.getElementById('page-model').style.display = page === 'model' ? 'block' : 'none';
+  document.getElementById('tab-rankings').className = page === 'rankings'
+    ? 'tab-btn-nav text-xs px-3 py-1 rounded-md bg-white text-slate-800 font-medium transition-all'
+    : 'tab-btn-nav text-xs px-3 py-1 rounded-md text-slate-400 hover:text-white transition-all';
+  document.getElementById('tab-model').className = page === 'model'
+    ? 'tab-btn-nav text-xs px-3 py-1 rounded-md bg-white text-slate-800 font-medium transition-all'
+    : 'tab-btn-nav text-xs px-3 py-1 rounded-md text-slate-400 hover:text-white transition-all';
+}
+
 // ─── State ────────────────────────────────────────────────────────────────────
 const S = {
   rows: [], filtered: [],
