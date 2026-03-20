@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revivn ICP Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .sort-col { user-select: none; }
+  .sort-col:hover { background: #f8fafc; }
+  .company-row:hover { background: #f8fafc; cursor: pointer; }
+  .company-row { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
+  .badge { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .filter-section { border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px; }
+  .filter-section:last-child { border-bottom: none; }
+  .btn-pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.1s; white-space: nowrap; }
+  .btn-pill:hover { background: #f1f5f9; }
+  .btn-pill.active { background: #1e293b; color: white; border-color: #1e293b; }
+  .btn-pill.active-amber { background: #fef3c7; color: #b45309; border-color: #fcd34d; }
+  .score-fill { height: 4px; border-radius: 2px; }
+  input[type=checkbox] { width: 14px; height: 14px; accent-color: #3b82f6; cursor: pointer; }
+  .detail-panel { display: none; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+  .detail-panel.open { display: table-row; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 text-sm">
+
+<!-- PASSWORD GATE -->
+<div id="gate" class="fixed inset-0 bg-slate-900 z-[999] flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-sm text-center">
+    <div class="text-3xl font-bold text-slate-800 mb-1">REVIVN</div>
+    <div class="text-slate-400 text-sm mb-8">ICP Dashboard · v4</div>
+    <input id="pw-input" type="password" placeholder="Enter password"
+      class="w-full border border-slate-200 rounded-xl px-4 py-3 text-center text-lg tracking-widest focus:outline-none focus:border-blue-400 mb-3"
+      onkeydown="if(event.key==='Enter')checkPW()">
+    <div id="pw-error" class="text-red-400 text-xs mb-3 hidden">Incorrect password</div>
+    <button onclick="checkPW()" class="w-full bg-slate-900 hover:bg-slate-700 text-white font-semibold py-3 rounded-xl transition-colors">
+      Enter
+    </button>
+  </div>
+</div>
+
+<script>
+function checkPW() {
+  const val = document.getElementById('pw-input').value.toLowerCase().trim();
+  if (val === 'crusty') {
+    document.getElementById('gate').style.display = 'none';
+    sessionStorage.setItem('icp_auth', '1');
+  } else {
+    document.getElementById('pw-error').classList.remove('hidden');
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+if (sessionStorage.getItem('icp_auth') === '1') {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('gate').style.display = 'none';
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('pw-input').focus();
+});
+</script>
+
+<!-- NAV -->
+<nav class="bg-slate-900 text-white h-11 flex items-center px-5 gap-3 fixed top-0 left-0 right-0 z-50 shadow">
+  <span class="font-bold text-sm tracking-wide">REVIVN</span>
+  <span class="text-slate-600 font-normal">ICP Dashboard</span>
+  <span class="text-slate-600 text-xs">v4 · Mar 2026</span>
+  <div class="flex-1"></div>
+  <div id="nav-stats" class="hidden items-center gap-5 text-xs">
+    <span id="stat-shown" class="text-white font-semibold"></span>
+    <span id="stat-top" class="text-emerald-400"></span>
+    <span id="stat-breakout" class="text-amber-400"></span>
+    <span id="stat-new" class="text-sky-400"></span>
+  </div>
+  <label class="ml-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-colors">
+    Load CSV
+    <input type="file" accept=".csv" id="csvFile" class="hidden">
+  </label>
+</nav>
+
+<!-- LAYOUT -->
+<div class="flex" style="padding-top:44px; height:100vh;">
+
+  <!-- SIDEBAR -->
+  <aside class="bg-white border-r border-slate-200 overflow-y-auto flex-shrink-0" style="width:260px;">
+    <div class="p-4 space-y-0">
+
+      <!-- Search -->
+      <div class="mb-4">
+        <input type="text" id="search" placeholder="Search company..."
+          class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 bg-slate-50">
+      </div>
+
+      <!-- Rep View -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">👤 Rep View</div>
+        <div class="flex flex-wrap gap-1.5">
+          <button data-rep="all" class="rep-btn btn-pill active">All</button>
+          <button data-rep="bishop+amanda" class="rep-btn btn-pill">Bishop + Amanda</button>
+          <button data-rep="unassigned" class="rep-btn btn-pill">New Prospects</button>
+        </div>
+      </div>
+
+      <!-- Quick Presets -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">⚡ Quick Filters</div>
+        <div class="flex flex-wrap gap-1.5">
+          <button id="preset-breakout" class="btn-pill" data-active="0">⚡ Breakout Only</button>
+          <button id="preset-mac" class="btn-pill" data-active="0">🖥 Confirmed Mac</button>
+          <button id="preset-unicorn" class="btn-pill" data-active="0">💎 Unicorn+</button>
+          <button id="preset-new" class="btn-pill" data-active="0">🆕 Not in CRM</button>
+        </div>
+      </div>
+
+      <!-- Min Score -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">📊 Min Score</div>
+        <div class="flex flex-wrap gap-1.5">
+          <button data-score="0" class="score-btn btn-pill active">All</button>
+          <button data-score="50" class="score-btn btn-pill">50+</button>
+          <button data-score="65" class="score-btn btn-pill">65+</button>
+          <button data-score="75" class="score-btn btn-pill">75+</button>
+          <button data-score="80" class="score-btn btn-pill">80+</button>
+          <button data-score="85" class="score-btn btn-pill">85+</button>
+        </div>
+      </div>
+
+      <!-- Headcount -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">👥 Headcount</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="emp-check" data-emp="500"> 500–999</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="emp-check" data-emp="1000"> 1,000–4,999</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="emp-check" data-emp="5000"> 5,000–14,999</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="emp-check" data-emp="15000"> 15,000+</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="emp-check" data-emp="unknown"> Unknown</label>
+        </div>
+      </div>
+
+      <!-- Funding Stage -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">💰 Funding Stage</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="stage-check" data-stage="public"> Public</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="stage-check" data-stage="late"> Late Stage / D+</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="stage-check" data-stage="series-c"> Series C</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="stage-check" data-stage="series-b"> Series B</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="stage-check" data-stage="series-a"> Series A</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="stage-check" data-stage="seed"> Seed / Pre-seed</label>
+        </div>
+      </div>
+
+      <!-- Valuation -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">💎 Valuation</div>
+        <div class="flex flex-wrap gap-1.5">
+          <button data-val="0" class="val-btn btn-pill active">Any</button>
+          <button data-val="1" class="val-btn btn-pill">$1B+</button>
+          <button data-val="3" class="val-btn btn-pill">$3B+</button>
+          <button data-val="10" class="val-btn btn-pill">$10B+</button>
+        </div>
+      </div>
+
+      <!-- Industry Tier -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">🏭 Industry</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="tier-check" data-tier="1"> <span class="badge bg-emerald-100 text-emerald-700">T1</span> AI/ML, SaaS, Cloud</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="tier-check" data-tier="2"> <span class="badge bg-blue-100 text-blue-700">T2</span> Security, FinTech</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="tier-check" data-tier="3"> <span class="badge bg-amber-100 text-amber-700">T3</span> HealthTech, Media</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="tier-check" data-tier="4"> <span class="badge bg-slate-100 text-slate-500">T4</span> Other</label>
+        </div>
+      </div>
+
+      <!-- HQ -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">📍 HQ Region</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hq-check" data-hq="sf"> SF / Bay Area</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hq-check" data-hq="nyc"> New York</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hq-check" data-hq="us"> Other US</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hq-check" data-hq="near-intl"> Near-International</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hq-check" data-hq="intl"> International</label>
+        </div>
+      </div>
+
+      <!-- Work Model -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">🏢 Work Model</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="work-check" data-work="office"> Office-first</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="work-check" data-work="hybrid"> Hybrid</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="work-check" data-work="remote-friendly"> Remote-friendly</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="work-check" data-work="remote"> Remote / Fully Remote</label>
+        </div>
+      </div>
+
+      <!-- Hardware -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">🖥️ Hardware</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hw-check" data-hw="confirmed"> Confirmed Mac</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hw-check" data-hw="inferred"> Mac Likely (inferred)</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hw-check" data-hw="mixed"> Mixed / Unknown</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="hw-check" data-hw="windows"> Windows</label>
+        </div>
+      </div>
+
+      <!-- CRM Status -->
+      <div class="filter-section">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">📋 CRM Status</div>
+        <div class="space-y-1.5">
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="crm-check" data-crm="new"> Not in CRM</label>
+          <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" class="crm-check" data-crm="in-crm"> In CRM</label>
+        </div>
+      </div>
+
+      <button id="resetBtn" class="w-full text-xs text-slate-400 hover:text-slate-700 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors mt-2">
+        Reset all filters
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 overflow-auto">
+
+    <!-- Upload prompt (auto-loads, shown briefly) -->
+    <div id="upload-prompt" class="flex flex-col items-center justify-center h-full text-center p-8">
+      <div class="text-5xl mb-4">⏳</div>
+      <h2 class="text-lg font-semibold text-slate-700 mb-2">Loading data…</h2>
+      <p class="text-slate-400 text-sm mb-6">If this takes too long, load manually:</p>
+      <label class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg cursor-pointer font-medium text-sm transition-colors">
+        Choose CSV file
+        <input type="file" accept=".csv" class="hidden" id="csvFile2">
+      </label>
+    </div>
+
+    <!-- Data area -->
+    <div id="data-area" class="hidden p-5">
+
+      <!-- Summary cards -->
+      <div id="summary-cards" class="grid grid-cols-5 gap-3 mb-4"></div>
+
+      <!-- Table -->
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="bg-slate-50 text-slate-400 uppercase tracking-wider" style="font-size:10px;">
+              <th class="px-3 py-3 text-left sort-col cursor-pointer w-10" data-col="Rank"># <span class="sort-icon text-slate-300">↕</span></th>
+              <th class="px-3 py-3 text-left sort-col cursor-pointer" data-col="Company">Company <span class="sort-icon text-slate-300">↕</span></th>
+              <th class="px-3 py-3 text-left sort-col cursor-pointer w-24" data-col="Total Score">Score <span class="sort-icon text-slate-300">↕</span></th>
+              <th class="px-3 py-3 text-left sort-col cursor-pointer w-20" data-col="Global Employees">Emp <span class="sort-icon text-slate-300">↕</span></th>
+              <th class="px-3 py-3 text-left w-32">Industry</th>
+              <th class="px-3 py-3 text-left w-28">HQ</th>
+              <th class="px-3 py-3 text-left w-24">Stage</th>
+              <th class="px-3 py-3 text-left w-20">Work</th>
+              <th class="px-3 py-3 text-left w-28">Hardware</th>
+              <th class="px-3 py-3 text-left w-28">CRM Stage</th>
+              <th class="px-3 py-3 text-left w-24">Owner</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div id="pagination" class="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 bg-slate-50"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-6" onclick="if(event.target===this)closeModal()">
+  <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
+    <div class="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-start justify-between rounded-t-2xl">
+      <div>
+        <h2 id="modal-name" class="text-lg font-bold"></h2>
+        <p id="modal-sub" class="text-xs text-slate-400 mt-0.5"></p>
+      </div>
+      <button onclick="closeModal()" class="text-slate-300 hover:text-slate-600 text-2xl leading-none ml-4">&times;</button>
+    </div>
+    <div id="modal-body" class="p-6"></div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const S = {
+  rows: [], filtered: [],
+  sortCol: 'Rank', sortDir: 'asc',
+  page: 0, pageSize: 50,
+  rep: 'all',
+  minScore: 0,
+  minVal: 0,
+  empBuckets: new Set(),
+  stageBuckets: new Set(),
+  tiers: new Set(),
+  hqRegions: new Set(),
+  workModels: new Set(),
+  hwTypes: new Set(),
+  crmFilters: new Set(),
+  presets: { breakout: false, mac: false, unicorn: false, newOnly: false },
+  search: '',
+};
+
+// ─── Parsers ──────────────────────────────────────────────────────────────────
+function parseEmp(s) {
+  if (!s) return null;
+  const n = parseInt(String(s).replace(/,/g, ''));
+  return isNaN(n) ? null : n;
+}
+
+function parseVal(s) {
+  if (!s) return null;
+  s = String(s).replace(/[$,\s]/g, '');
+  const m = s.match(/^([\d.]+)([BMK]?)$/i);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  const u = m[2].toUpperCase();
+  if (u === 'B') return n * 1e9;
+  if (u === 'M') return n * 1e6;
+  if (u === 'K') return n * 1e3;
+  return n;
+}
+
+function parseScore(s) { return parseInt(s) || 0; }
+
+function empBucket(emp) {
+  if (emp === null) return 'unknown';
+  if (emp >= 15000) return '15000';
+  if (emp >= 5000) return '5000';
+  if (emp >= 1000) return '1000';
+  if (emp >= 500) return '500';
+  return 'under500';
+}
+
+function stageBucket(row) {
+  const stage = (row['Last Funding Round'] || '').toLowerCase();
+  const status = (row['Financial Status'] || '').toLowerCase();
+  if (status.includes('public') || stage.includes('ipo') || stage.includes('nyse') || stage.includes('nasdaq')) return 'public';
+  if (stage.includes('late') || stage.includes('series d') || stage.includes('series e') || stage.includes('series f') || stage.includes('growth equity')) return 'late';
+  if (stage.includes('series c')) return 'series-c';
+  if (stage.includes('series b')) return 'series-b';
+  if (stage.includes('series a')) return 'series-a';
+  if (stage.includes('seed') || stage.includes('pre-seed') || stage.includes('angel')) return 'seed';
+  return 'unknown';
+}
+
+function industryTier(v) {
+  if (!v) return 0;
+  const s = v.toLowerCase();
+  if (/ai\/ml|artificial intel|machine learn|b2b saas|saas|cloud|martech|data infra|data platform/.test(s)) return 1;
+  if (/security|cyber|fintech|financial tech|devtools|dev tools|developer tools|defense tech|defensetech|space tech/.test(s)) return 2;
+  if (/healthtech|health tech|digital health|media|streaming|adtech|ad tech|hr tech|ecommerce|e-commerce/.test(s)) return 3;
+  if (/retail|advertising|architecture|hospitality|oil|construction/.test(s)) return -1;
+  return 4;
+}
+
+function hqRegion(hq) {
+  if (!hq) return 'unknown';
+  const h = hq.toLowerCase();
+  const sfKeys = ['san francisco', 'palo alto', 'mountain view', 'menlo park', 'redwood', 'sunnyvale', 'santa clara', 'san jose', 'south san francisco', 'foster city', 'burlingame', 'berkeley', 'oakland', 'emeryville', ', ca'];
+  const nycKeys = ['new york', 'brooklyn', 'manhattan'];
+  const nearKeys = ['toronto', 'london', 'tel aviv', 'dublin', 'vancouver'];
+  const usKeys = [', al', ', ak', ', az', ', ar', ', co', ', ct', ', de', ', fl', ', ga', ', hi', ', id', ', il', ', in', ', ia', ', ks', ', ky', ', la', ', me', ', md', ', ma', ', mi', ', mn', ', ms', ', mo', ', mt', ', ne', ', nv', ', nh', ', nj', ', nm', ', ny', ', nc', ', nd', ', oh', ', ok', ', or', ', pa', ', ri', ', sc', ', sd', ', tn', ', tx', ', ut', ', vt', ', va', ', wa', ', wv', ', wi', ', wy', ', dc', 'united states', ', usa'];
+  if (sfKeys.some(k => h.includes(k))) return 'sf';
+  if (nycKeys.some(k => h.includes(k))) return 'nyc';
+  if (usKeys.some(k => h.includes(k))) return 'us';
+  if (nearKeys.some(k => h.includes(k))) return 'near-intl';
+  if (h.includes(',')) return 'intl';
+  return 'unknown';
+}
+
+function hwType(row) {
+  const fleet = (row['Hardware Fleet'] || '').toLowerCase();
+  const note = (row['Note: Hardware'] || '').toLowerCase();
+  if (!fleet && !note) return 'mixed';
+  const combined = fleet + ' ' + note;
+  if (/pure.?mac|confirmed.*mac|jamf|mosyle|kandji/.test(combined)) return 'confirmed';
+  if (/primarily.?mac|mac.?likely|inferred.*mac|mac.?probable/.test(combined)) return 'inferred';
+  if (/windows|intune|airwatch|workspace one/.test(combined)) return 'windows';
+  if (/mixed/.test(combined)) return 'mixed';
+  if (/mac/.test(combined)) return 'inferred';
+  return 'mixed';
+}
+
+function workModel(row) {
+  const wm = (row['Work Model'] || '').toLowerCase();
+  if (/office.?first|in.?office|on.?site/.test(wm)) return 'office';
+  if (/hybrid/.test(wm)) return 'hybrid';
+  if (/remote.?friendly|flexible/.test(wm)) return 'remote-friendly';
+  if (/remote.?first|fully.?remote|all.?remote|distributed/.test(wm)) return 'remote';
+  return 'unknown';
+}
+
+function inCRM(row) {
+  return !!(row['CRM Stage'] || row['Account Owner']);
+}
+
+// ─── Enrichment ───────────────────────────────────────────────────────────────
+function enrich(row) {
+  row._emp = parseEmp(row['Global Employees']);
+  row._val = parseVal(row['Current Valuation']);
+  row._score = parseScore(row['Total Score']);
+  row._icpFit = parseScore(row['ICP Fit /85']);
+  row._breakout = parseScore(row['Breakout ε /19']);
+  row._stage = stageBucket(row);
+  row._tier = industryTier(row['Industry Vertical']);
+  row._hq = hqRegion(row['Headquarters']);
+  row._hw = hwType(row);
+  row._work = workModel(row);
+  row._inCRM = inCRM(row);
+  row._empBucket = empBucket(row._emp);
+  return row;
+}
+
+// ─── Filtering ────────────────────────────────────────────────────────────────
+function applyFilters() {
+  S.filtered = S.rows.filter(r => {
+    if (S.search && !r['Company'].toLowerCase().includes(S.search.toLowerCase())) return false;
+    if (r._score < S.minScore) return false;
+
+    // Rep
+    if (S.rep === 'bishop+amanda') {
+      const owner = (r['Account Owner'] || '').toLowerCase();
+      if (!owner.includes('bishop') && !owner.includes('amanda')) return false;
+    } else if (S.rep === 'unassigned') {
+      if (r._inCRM) return false;
+    }
+
+    // Presets
+    if (S.presets.breakout && !(r['Flags'] || '').includes('Breakout')) return false;
+    if (S.presets.mac && r._hw !== 'confirmed') return false;
+    if (S.presets.unicorn && (!r._val || r._val < 1e9)) return false;
+    if (S.presets.newOnly && r._inCRM) return false;
+
+    // Valuation
+    if (S.minVal > 0 && (!r._val || r._val < S.minVal * 1e9)) return false;
+
+    // Checkboxes — if none checked in group, show all
+    if (S.empBuckets.size > 0 && !S.empBuckets.has(r._empBucket)) return false;
+    if (S.stageBuckets.size > 0 && !S.stageBuckets.has(r._stage)) return false;
+    if (S.tiers.size > 0 && !S.tiers.has(String(r._tier))) return false;
+    if (S.hqRegions.size > 0 && !S.hqRegions.has(r._hq)) return false;
+    if (S.workModels.size > 0 && !S.workModels.has(r._work)) return false;
+    if (S.hwTypes.size > 0 && !S.hwTypes.has(r._hw)) return false;
+    if (S.crmFilters.size > 0) {
+      const match = (S.crmFilters.has('new') && !r._inCRM) || (S.crmFilters.has('in-crm') && r._inCRM);
+      if (!match) return false;
+    }
+
+    return true;
+  });
+
+  // Sort
+  S.filtered.sort((a, b) => {
+    let av = a[S.sortCol], bv = b[S.sortCol];
+    const numCols = ['Rank', 'Total Score', 'ICP Fit /85', 'Breakout ε /19', 'Global Employees'];
+    if (numCols.includes(S.sortCol)) {
+      av = parseFloat(String(av).replace(/,/g, '')) || 0;
+      bv = parseFloat(String(bv).replace(/,/g, '')) || 0;
+    } else {
+      av = String(av || '').toLowerCase();
+      bv = String(bv || '').toLowerCase();
+    }
+    if (av < bv) return S.sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return S.sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  S.page = 0;
+  renderTable();
+  renderStats();
+}
+
+// ─── Rendering helpers ────────────────────────────────────────────────────────
+function scoreColor(s) {
+  if (s >= 80) return 'text-emerald-600 font-bold';
+  if (s >= 65) return 'text-blue-600 font-semibold';
+  if (s >= 50) return 'text-amber-600';
+  return 'text-slate-400';
+}
+
+function scoreBg(s) {
+  if (s >= 80) return 'bg-emerald-500';
+  if (s >= 65) return 'bg-blue-500';
+  if (s >= 50) return 'bg-amber-400';
+  return 'bg-slate-300';
+}
+
+function tierBadge(tier) {
+  const map = {
+    1: ['bg-emerald-100 text-emerald-700', 'T1'],
+    2: ['bg-blue-100 text-blue-700', 'T2'],
+    3: ['bg-amber-100 text-amber-700', 'T3'],
+    4: ['bg-slate-100 text-slate-500', 'T4'],
+    '-1': ['bg-red-100 text-red-500', 'DQ'],
+    0: ['bg-slate-100 text-slate-400', '?'],
+  };
+  const [cls, label] = map[tier] || map[0];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function hwBadge(hw) {
+  const map = {
+    confirmed: ['bg-emerald-100 text-emerald-700', '🍎 Mac'],
+    inferred: ['bg-slate-100 text-slate-500', '🍎 Likely'],
+    mixed: ['bg-slate-100 text-slate-400', '~ Mixed'],
+    windows: ['bg-red-50 text-red-400', '🪟 Win'],
+  };
+  const [cls, label] = map[hw] || map['mixed'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function workBadge(wm) {
+  const map = {
+    office: ['bg-green-50 text-green-700', '🏢 Office'],
+    hybrid: ['bg-sky-50 text-sky-700', '⚡ Hybrid'],
+    'remote-friendly': ['bg-slate-100 text-slate-500', '🌐 Flex'],
+    remote: ['bg-orange-50 text-orange-600', '🏠 Remote'],
+    unknown: ['bg-slate-50 text-slate-400', '?'],
+  };
+  const [cls, label] = map[wm] || map['unknown'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function crmBadge(stage) {
+  if (!stage) return '';
+  const s = stage.toLowerCase();
+  if (s.includes('closed won')) return `<span class="badge bg-emerald-100 text-emerald-700">${stage}</span>`;
+  if (s.includes('closed')) return `<span class="badge bg-red-100 text-red-500">${stage}</span>`;
+  if (s.includes('negotiat') || s.includes('proposal')) return `<span class="badge bg-purple-100 text-purple-700">${stage}</span>`;
+  if (s.includes('discovery') || s.includes('qualify')) return `<span class="badge bg-blue-100 text-blue-700">${stage}</span>`;
+  return `<span class="badge bg-slate-100 text-slate-600">${stage}</span>`;
+}
+
+function fmtEmp(emp) {
+  if (!emp) return '<span class="text-slate-300">—</span>';
+  return emp.toLocaleString();
+}
+
+function fmtHQ(hq) {
+  if (!hq) return '<span class="text-slate-300">—</span>';
+  // Show city only
+  const parts = hq.split(',');
+  return parts[0].trim();
+}
+
+function stagePill(stage) {
+  if (!stage) return '<span class="text-slate-300">—</span>';
+  const s = stage.toLowerCase();
+  let cls = 'bg-slate-100 text-slate-500';
+  if (s.includes('public') || s.includes('ipo')) cls = 'bg-violet-100 text-violet-700';
+  else if (s.includes('late') || s.includes('series d') || s.includes('series e') || s.includes('series f')) cls = 'bg-indigo-100 text-indigo-700';
+  else if (s.includes('series c')) cls = 'bg-blue-100 text-blue-700';
+  else if (s.includes('series b')) cls = 'bg-sky-100 text-sky-700';
+  else if (s.includes('series a')) cls = 'bg-cyan-100 text-cyan-600';
+  else if (s.includes('seed')) cls = 'bg-teal-100 text-teal-600';
+  return `<span class="badge ${cls}">${stage}</span>`;
+}
+
+// ─── Table render ─────────────────────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  const start = S.page * S.pageSize;
+  const slice = S.filtered.slice(start, start + S.pageSize);
+
+  if (slice.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" class="px-4 py-12 text-center text-slate-400">No companies match the current filters.</td></tr>`;
+    renderPagination();
+    return;
+  }
+
+  tbody.innerHTML = slice.map((r, i) => {
+    const idx = start + i;
+    const rank = r['Rank'] || (idx + 1);
+    const score = r._score;
+    const icp = r._icpFit;
+    const brk = r._breakout;
+    const isBreakout = (r['Flags'] || '').includes('Breakout');
+    const flags = isBreakout ? '⚡' : '';
+    const industry = r['Industry Vertical'] || '';
+    const industryShort = industry.length > 18 ? industry.substring(0, 17) + '…' : industry;
+    const owner = r['Account Owner'] || '';
+    const ownerShort = owner.split(' ')[0]; // first name only
+
+    return `<tr class="company-row" onclick="showDetail(${idx})">
+      <td class="px-3 py-2.5 text-slate-400 w-10">${rank}</td>
+      <td class="px-3 py-2.5 font-medium">
+        <span>${r['Company']}</span>
+        ${flags ? `<span class="ml-1 text-amber-400 text-xs">${flags}</span>` : ''}
+        ${r['Rank Label'] === 'Top ICP' ? '<span class="ml-1 text-emerald-500 text-xs">★</span>' : ''}
+      </td>
+      <td class="px-3 py-2.5 w-24">
+        <div class="flex items-center gap-2">
+          <span class="${scoreColor(score)} text-sm">${score}</span>
+          <div class="flex-1 bg-slate-100 rounded-full overflow-hidden" style="height:4px;min-width:40px">
+            <div class="score-fill ${scoreBg(score)}" style="width:${Math.min(score,100)}%"></div>
+          </div>
+        </div>
+        <div class="text-slate-400 text-xs mt-0.5">${icp}+${brk}</div>
+      </td>
+      <td class="px-3 py-2.5 text-slate-600 w-20">${fmtEmp(r._emp)}</td>
+      <td class="px-3 py-2.5 w-32">
+        ${tierBadge(r._tier)}
+        <span class="ml-1 text-slate-500" title="${industry}">${industryShort}</span>
+      </td>
+      <td class="px-3 py-2.5 text-slate-600 w-28">${fmtHQ(r['Headquarters'])}</td>
+      <td class="px-3 py-2.5 w-24">${stagePill(r['Last Funding Round'])}</td>
+      <td class="px-3 py-2.5 w-20">${workBadge(r._work)}</td>
+      <td class="px-3 py-2.5 w-28">${hwBadge(r._hw)}</td>
+      <td class="px-3 py-2.5 w-28">${crmBadge(r['CRM Stage'])}</td>
+      <td class="px-3 py-2.5 w-24 text-slate-500">${ownerShort}</td>
+    </tr>`;
+  }).join('');
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = S.filtered.length;
+  const pages = Math.ceil(total / S.pageSize);
+  const start = S.page * S.pageSize + 1;
+  const end = Math.min((S.page + 1) * S.pageSize, total);
+  const pg = document.getElementById('pagination');
+  pg.innerHTML = `
+    <span>${start}–${end} of ${total.toLocaleString()} companies</span>
+    <div class="flex gap-2">
+      <button onclick="changePage(-1)" ${S.page === 0 ? 'disabled' : ''} class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">← Prev</button>
+      <span class="px-2 py-1">${S.page + 1} / ${pages}</span>
+      <button onclick="changePage(1)" ${S.page >= pages - 1 ? 'disabled' : ''} class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">Next →</button>
+    </div>`;
+}
+
+function changePage(dir) {
+  const pages = Math.ceil(S.filtered.length / S.pageSize);
+  S.page = Math.max(0, Math.min(pages - 1, S.page + dir));
+  renderTable();
+  document.getElementById('data-area').scrollTop = 0;
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function renderStats() {
+  const rows = S.filtered;
+  const topICP = rows.filter(r => r._score >= 80).length;
+  const breakout = rows.filter(r => (r['Flags'] || '').includes('Breakout')).length;
+  const newP = rows.filter(r => !r._inCRM).length;
+  const confirmedMac = rows.filter(r => r._hw === 'confirmed').length;
+
+  // Nav stats
+  document.getElementById('stat-shown').textContent = `${rows.length.toLocaleString()} companies`;
+  document.getElementById('stat-top').textContent = `${topICP} Top ICP`;
+  document.getElementById('stat-breakout').textContent = `${breakout} ⚡ Breakout`;
+  document.getElementById('stat-new').textContent = `${newP} new`;
+
+  // Summary cards
+  const cards = [
+    { label: 'Shown', value: rows.length.toLocaleString(), color: 'text-slate-800', bg: 'bg-white' },
+    { label: 'Top ICP (80+)', value: topICP, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: '⚡ Breakout Watch', value: breakout, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: '🆕 Not in CRM', value: newP, color: 'text-sky-600', bg: 'bg-sky-50' },
+    { label: '🍎 Confirmed Mac', value: confirmedMac, color: 'text-violet-600', bg: 'bg-violet-50' },
+  ];
+  document.getElementById('summary-cards').innerHTML = cards.map(c => `
+    <div class="${c.bg} rounded-xl border border-slate-200 px-4 py-3">
+      <div class="${c.color} text-2xl font-bold">${c.value}</div>
+      <div class="text-slate-500 text-xs mt-0.5">${c.label}</div>
+    </div>`).join('');
+}
+
+// ─── Detail Modal ─────────────────────────────────────────────────────────────
+function showDetail(idx) {
+  const r = S.filtered[idx];
+  if (!r) return;
+  document.getElementById('modal-name').textContent = r['Company'];
+  document.getElementById('modal-sub').textContent =
+    `${r['Industry Vertical'] || '—'} · ${r['Headquarters'] || '—'} · ${r['Last Funding Round'] || '—'}`;
+
+  const dims = [
+    ['Hardware Fleet', r['Score: Hardware /6'], r['Note: Hardware']],
+    ['Employee Count', r['Score: Employees /16'], r['Note: Employees']],
+    ['Industry Vertical', r['Score: Industry /16'], r['Note: Industry']],
+    ['Tech Stack', r['Score: Tech Stack /14'], r['Note: Tech Stack']],
+    ['HQ Location', r['Score: HQ /8'], r['Note: HQ']],
+    ['Financial Maturity', r['Score: Financial /8'], r['Note: Financial']],
+    ['NA Concentration', r['Score: NA Concentration /8'], r['Note: NA']],
+    ['Office Presence', r['Score: Office Presence /8'], ''],
+    ['Company Age', r['Score: Company Age /3'], r['Note: Age']],
+  ];
+
+  const dimRows = dims.filter(d => d[1]).map(([name, pts, note]) => {
+    const [got, max] = (pts || '0 / 0').split('/').map(x => parseInt(x.trim()));
+    const pct = max ? Math.round(got / max * 100) : 0;
+    const barColor = pct >= 75 ? 'bg-emerald-400' : pct >= 50 ? 'bg-blue-400' : pct >= 25 ? 'bg-amber-400' : 'bg-red-300';
+    return `<tr class="border-b border-slate-50">
+      <td class="py-2 pr-4 text-slate-600 text-xs w-40">${name}</td>
+      <td class="py-2 pr-4 text-xs font-mono font-semibold w-16">${pts}</td>
+      <td class="py-2 pr-4 w-24">
+        <div class="bg-slate-100 rounded-full overflow-hidden h-1.5">
+          <div class="${barColor} h-1.5 rounded-full" style="width:${pct}%"></div>
+        </div>
+      </td>
+      <td class="py-2 text-xs text-slate-400">${note || ''}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <!-- Score header -->
+    <div class="flex items-center gap-6 mb-5 p-4 bg-slate-50 rounded-xl">
+      <div>
+        <div class="${scoreColor(r._score)} text-4xl font-bold">${r._score}</div>
+        <div class="text-xs text-slate-400 mt-1">${r['Rank Label'] || ''}</div>
+      </div>
+      <div class="text-slate-400 text-xl">=</div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-slate-700">${r._icpFit}</div>
+        <div class="text-xs text-slate-400">ICP Fit /85</div>
+      </div>
+      <div class="text-slate-400">+</div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-amber-500">${r._breakout}</div>
+        <div class="text-xs text-slate-400">Breakout ε /19</div>
+      </div>
+      ${r['Flags'] ? `<div class="ml-auto"><span class="badge bg-amber-100 text-amber-700 text-sm px-3 py-1">${r['Flags']}</span></div>` : ''}
+    </div>
+
+    <!-- Dimension scores -->
+    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Dimension Breakdown</h3>
+    <table class="w-full mb-5"><tbody>${dimRows}</tbody></table>
+
+    <!-- Breakout reasoning -->
+    ${r['Breakout Reasoning'] ? `
+    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Breakout ε Reasoning</h3>
+    <p class="text-xs text-slate-600 bg-amber-50 border border-amber-100 rounded-lg p-3 mb-5">${r['Breakout Reasoning']}</p>` : ''}
+
+    <!-- Key data -->
+    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Company Data</h3>
+    <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-xs mb-5">
+      ${dataRow('Employees', r['Global Employees'])}
+      ${dataRow('NA Employees', r['North America Employees (%)'])}
+      ${dataRow('Founded', r['Founded'])}
+      ${dataRow('Valuation', r['Current Valuation'])}
+      ${dataRow('Revenue Est.', r['Revenue Estimate'])}
+      ${dataRow('Emp Growth', r['Employee Growth YoY'])}
+      ${dataRow('Rev Growth', r['Revenue Growth YoY'])}
+      ${dataRow('MDM Tool', r['MDM Tool'])}
+      ${dataRow('Productivity', r['Productivity Suite'])}
+      ${dataRow('Work Model', r['Work Model'])}
+      ${dataRow('Key Investors', r['Key Investors'])}
+      ${dataRow('Hardware Evidence', r['Hardware Evidence'])}
+    </div>
+
+    <!-- CRM -->
+    ${(r['CRM Stage'] || r['Account Owner'] || r['CRM Note']) ? `
+    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">CRM</h3>
+    <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-xs bg-slate-50 rounded-lg p-3">
+      ${dataRow('Stage', r['CRM Stage'])}
+      ${dataRow('Owner', r['Account Owner'])}
+      ${r['CRM Note'] ? dataRow('Note', r['CRM Note']) : ''}
+    </div>` : ''}
+  `;
+
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function dataRow(label, val) {
+  if (!val) return '';
+  return `<div><span class="text-slate-400">${label}:</span> <span class="text-slate-700 font-medium">${val}</span></div>`;
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+
+// ─── CSV Loading ──────────────────────────────────────────────────────────────
+function loadCSV(file) {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: ({ data }) => {
+      // Filter out section divider rows
+      S.rows = data.filter(r => r['Company'] && !r['Rank'].toString().includes('──')).map(enrich);
+      document.getElementById('upload-prompt').classList.add('hidden');
+      document.getElementById('data-area').classList.remove('hidden');
+      document.getElementById('nav-stats').classList.remove('hidden');
+      document.getElementById('nav-stats').classList.add('flex');
+      applyFilters();
+    }
+  });
+}
+
+
+// Auto-fetch data.csv on load
+window.addEventListener('DOMContentLoaded', () => {
+  fetch('data.csv')
+    .then(r => { if (!r.ok) throw new Error('not found'); return r.text(); })
+    .then(text => {
+      const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+      S.rows = result.data.filter(r => r['Company'] && !String(r['Rank']).includes('──')).map(enrich);
+      document.getElementById('upload-prompt').classList.add('hidden');
+      document.getElementById('data-area').classList.remove('hidden');
+      document.getElementById('nav-stats').classList.remove('hidden');
+      document.getElementById('nav-stats').classList.add('flex');
+      applyFilters();
+    })
+    .catch(() => {
+      // fallback: show manual upload
+      document.getElementById('upload-prompt').querySelector('h2').textContent = 'Load your ICP Rankings';
+      document.getElementById('upload-prompt').querySelector('p').innerHTML = 'Upload the CSV to get started';
+    });
+});
+
+// ─── Event wiring ─────────────────────────────────────────────────────────────
+document.getElementById('csvFile').addEventListener('change', e => e.target.files[0] && loadCSV(e.target.files[0]));
+document.getElementById('csvFile2').addEventListener('change', e => e.target.files[0] && loadCSV(e.target.files[0]));
+
+document.getElementById('search').addEventListener('input', e => { S.search = e.target.value; applyFilters(); });
+
+// Rep buttons
+document.querySelectorAll('.rep-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rep-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    S.rep = btn.dataset.rep;
+    applyFilters();
+  });
+});
+
+// Score buttons
+document.querySelectorAll('.score-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    S.minScore = parseInt(btn.dataset.score);
+    applyFilters();
+  });
+});
+
+// Val buttons
+document.querySelectorAll('.val-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.val-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    S.minVal = parseInt(btn.dataset.val);
+    applyFilters();
+  });
+});
+
+// Presets
+const presetMap = {
+  'preset-breakout': 'breakout',
+  'preset-mac': 'mac',
+  'preset-unicorn': 'unicorn',
+  'preset-new': 'newOnly',
+};
+Object.entries(presetMap).forEach(([id, key]) => {
+  document.getElementById(id).addEventListener('click', function() {
+    S.presets[key] = !S.presets[key];
+    this.classList.toggle('active', S.presets[key]);
+    applyFilters();
+  });
+});
+
+// Checkbox groups
+function wireCheckboxes(selector, set) {
+  document.querySelectorAll(selector).forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.checked ? set.add(cb.dataset[Object.keys(cb.dataset)[0]]) : set.delete(cb.dataset[Object.keys(cb.dataset)[0]]);
+      applyFilters();
+    });
+  });
+}
+wireCheckboxes('.emp-check', S.empBuckets);
+wireCheckboxes('.stage-check', S.stageBuckets);
+wireCheckboxes('.tier-check', S.tiers);
+wireCheckboxes('.hq-check', S.hqRegions);
+wireCheckboxes('.work-check', S.workModels);
+wireCheckboxes('.hw-check', S.hwTypes);
+wireCheckboxes('.crm-check', S.crmFilters);
+
+// Sorting
+document.querySelectorAll('.sort-col').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (S.sortCol === col) S.sortDir = S.sortDir === 'asc' ? 'desc' : 'asc';
+    else { S.sortCol = col; S.sortDir = col === 'Total Score' ? 'desc' : 'asc'; }
+    document.querySelectorAll('.sort-icon').forEach(i => i.textContent = '↕');
+    th.querySelector('.sort-icon').textContent = S.sortDir === 'asc' ? '↑' : '↓';
+    applyFilters();
+  });
+});
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click', () => {
+  S.search = ''; S.rep = 'all'; S.minScore = 0; S.minVal = 0;
+  S.empBuckets.clear(); S.stageBuckets.clear(); S.tiers.clear();
+  S.hqRegions.clear(); S.workModels.clear(); S.hwTypes.clear(); S.crmFilters.clear();
+  S.presets = { breakout: false, mac: false, unicorn: false, newOnly: false };
+
+  document.getElementById('search').value = '';
+  document.querySelectorAll('.rep-btn').forEach(b => b.classList.toggle('active', b.dataset.rep === 'all'));
+  document.querySelectorAll('.score-btn').forEach(b => b.classList.toggle('active', b.dataset.score === '0'));
+  document.querySelectorAll('.val-btn').forEach(b => b.classList.toggle('active', b.dataset.val === '0'));
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('[id^=preset-]').forEach(b => b.classList.remove('active'));
+  applyFilters();
+});
+
+// Keyboard close modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
