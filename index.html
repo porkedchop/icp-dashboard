@@ -546,6 +546,7 @@ function showPage(page) {
 // ─── State ────────────────────────────────────────────────────────────────────
 const S = {
   rows: [], filtered: [],
+  datasets: [], activeDataset: -1,
   sortCol: 'Rank', sortDir: 'asc',
   page: 0, pageSize: 50,
   rep: 'all',
