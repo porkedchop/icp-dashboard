@@ -6,6 +6,7 @@
 <title>Revivn ICP Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -87,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     Load CSV
     <input type="file" accept=".csv" id="csvFile" class="hidden">
   </label>
+  <button onclick="exportXLSX()" class="ml-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+    Export XLSX
+  </button>
 </nav>
 
 <!-- LAYOUT -->
@@ -1145,6 +1149,47 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('upload-prompt').querySelector('p').innerHTML = 'Upload the CSV to get started';
     });
 });
+
+// ─── Export XLSX ──────────────────────────────────────────────────────────────
+function exportXLSX() {
+  const rows = S.filtered.length ? S.filtered : S.rows;
+  if (!rows.length) { alert('No data to export.'); return; }
+
+  const cols = [
+    'Rank', 'Company', 'Score', 'ICP_Fit', 'Breakout',
+    'Global_Employees', 'US_Employee_Pct', 'HQ_Location',
+    'Industry_Vertical', 'Funding_Stage', 'Valuation_USD',
+    'Work_Model', 'Hardware_Fleet', 'CRM_Stage', 'Account_Owner',
+    'Revenue_Growth_Pct', 'Score_Breakdown'
+  ];
+
+  const header = [
+    'Rank', 'Company', 'Total Score', 'ICP Fit', 'Breakout ε',
+    'Global Employees', 'US Employee %', 'HQ Location',
+    'Industry Vertical', 'Funding Stage', 'Valuation (USD)',
+    'Work Model', 'Hardware Fleet', 'CRM Stage', 'Account Owner',
+    'Revenue Growth %', 'Score Breakdown'
+  ];
+
+  const sheetData = [header, ...rows.map(r => cols.map(c => r[c] ?? ''))];
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:6},{wch:30},{wch:12},{wch:10},{wch:10},
+    {wch:18},{wch:14},{wch:22},{wch:22},{wch:16},{wch:16},
+    {wch:14},{wch:18},{wch:20},{wch:20},{wch:16},{wch:60}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const tabName = S.datasets[S.activeDataset]?.name || 'ICP Rankings';
+  XLSX.utils.book_append_sheet(wb, ws, tabName.slice(0, 31));
+
+  const date = new Date().toISOString().slice(0,10);
+  const filename = `Revivn_ICP_${tabName.replace(/[^a-z0-9]/gi,'_')}_${date}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
 
 // ─── Event wiring ─────────────────────────────────────────────────────────────
 document.getElementById('csvFile').addEventListener('change', e => e.target.files[0] && loadCSV(e.target.files[0]));
