@@ -2396,13 +2396,25 @@ function closeModal() {
 }
 
 // ─── CSV Loading ──────────────────────────────────────────────────────────────
+const REQUIRED_COLS = ['Company', 'Total Score', 'ICP Fit /85'];
+
 function loadCSV(file) {
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
-    complete: ({ data }) => {
+    complete: ({ data, meta }) => {
+      const headers = meta.fields || [];
+      const missing = REQUIRED_COLS.filter(c => !headers.includes(c));
+      if (missing.length) {
+        alert(`This file doesn't look like a scored ICP list.\n\nMissing columns: ${missing.join(', ')}\n\nPlease upload a CSV exported from the ICP ranking pipeline.`);
+        return;
+      }
       // Filter out section divider rows
-      S.rows = data.filter(r => r['Company'] && !r['Rank'].toString().includes('──')).map(enrich);
+      S.rows = data.filter(r => r['Company'] && !String(r['Rank'] || '').includes('──')).map(enrich);
+      if (!S.rows.length) {
+        alert('No valid company rows found in this file.');
+        return;
+      }
       document.getElementById('upload-prompt').classList.add('hidden');
       document.getElementById('data-area').classList.remove('hidden');
       document.getElementById('nav-stats').classList.remove('hidden');
