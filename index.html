@@ -27,6 +27,25 @@
   input[type=checkbox] { width: 14px; height: 14px; accent-color: #3b82f6; cursor: pointer; }
   .detail-panel { display: none; background: #f8fafc; border-top: 1px solid #e2e8f0; }
   .detail-panel.open { display: table-row; }
+
+  /* Mobile sidebar drawer */
+  #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40; }
+  #sidebar-overlay.open { display: block; }
+  @media (max-width: 767px) {
+    #main-sidebar {
+      position: fixed; top: 44px; left: 0; bottom: 0;
+      transform: translateX(-100%); transition: transform 0.25s ease;
+      z-index: 41; width: 280px !important;
+    }
+    #main-sidebar.open { transform: translateX(0); }
+    .hide-mobile { display: none !important; }
+    .mobile-only { display: flex !important; }
+    #summary-cards { grid-template-columns: repeat(2, 1fr) !important; }
+    .col-hide-mobile { display: none; }
+    .btn-pill { font-size: 12px; padding: 5px 12px; }
+    input[type=checkbox] { width: 16px; height: 16px; }
+  }
+  .mobile-only { display: none; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 text-sm">
@@ -128,13 +147,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <!-- NAV -->
-<nav class="bg-slate-900 text-white h-11 flex items-center px-5 gap-3 fixed top-0 left-0 right-0 z-50 shadow">
+<nav class="bg-slate-900 text-white h-11 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50 shadow">
+  <button onclick="toggleSidebar()" class="mobile-only items-center justify-center w-8 h-8 rounded-lg hover:bg-slate-700 text-white text-lg leading-none">☰</button>
   <span class="font-bold text-sm tracking-wide">REVIVN</span>
-  <span class="text-slate-600 font-normal">ICP Dashboard</span>
-  <span class="text-slate-600 text-xs">v5 · Mar 2026 · 1,531 co.</span>
+  <span class="text-slate-600 font-normal hide-mobile">ICP Dashboard</span>
+  <span class="text-slate-600 text-xs hide-mobile">v5 · Mar 2026 · 1,531 co.</span>
   <div class="flex-1"></div>
-  <div id="nav-stats" class="hidden items-center gap-5 text-xs">
+  <div id="nav-stats" class="hidden items-center gap-5 text-xs hide-mobile">
     <span id="stat-shown" class="text-white font-semibold"></span>
     <span id="stat-top" class="text-emerald-400"></span>
     <span id="stat-breakout" class="text-amber-400"></span>
@@ -158,10 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </nav>
 
 <!-- LAYOUT -->
+<div id="page-rankings">
 <div class="flex" style="padding-top:44px; height:100vh;">
 
   <!-- SIDEBAR -->
-  <aside class="bg-white border-r border-slate-200 overflow-y-auto flex-shrink-0" style="width:260px;">
+  <aside id="main-sidebar" class="bg-white border-r border-slate-200 overflow-y-auto flex-shrink-0" style="width:260px;">
     <div class="p-4 space-y-0">
 
       <!-- Search -->
@@ -329,14 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
               <th class="px-3 py-3 text-left sort-col cursor-pointer w-10" data-col="Rank"># <span class="sort-icon text-slate-300">↕</span></th>
               <th class="px-3 py-3 text-left sort-col cursor-pointer" data-col="Company">Company <span class="sort-icon text-slate-300">↕</span></th>
               <th class="px-3 py-3 text-left sort-col cursor-pointer w-24" data-col="Total Score">Score <span class="sort-icon text-slate-300">↕</span></th>
-              <th class="px-3 py-3 text-left sort-col cursor-pointer w-20" data-col="Global Employees">Emp <span class="sort-icon text-slate-300">↕</span></th>
-              <th class="px-3 py-3 text-left w-32">Industry</th>
-              <th class="px-3 py-3 text-left w-28">HQ</th>
-              <th class="px-3 py-3 text-left w-24">Stage</th>
-              <th class="px-3 py-3 text-left w-20">Work</th>
-              <th class="px-3 py-3 text-left w-28">Hardware</th>
-              <th class="px-3 py-3 text-left w-28">CRM Stage</th>
-              <th class="px-3 py-3 text-left w-24">Owner</th>
+              <th class="px-3 py-3 text-left sort-col cursor-pointer w-20 col-hide-mobile" data-col="Global Employees">Emp <span class="sort-icon text-slate-300">↕</span></th>
+              <th class="px-3 py-3 text-left w-32 col-hide-mobile">Industry</th>
+              <th class="px-3 py-3 text-left w-28 col-hide-mobile">HQ</th>
+              <th class="px-3 py-3 text-left w-24 col-hide-mobile">Stage</th>
+              <th class="px-3 py-3 text-left w-20 col-hide-mobile">Work</th>
+              <th class="px-3 py-3 text-left w-28 col-hide-mobile">Hardware</th>
+              <th class="px-3 py-3 text-left w-28 col-hide-mobile">CRM Stage</th>
+              <th class="px-3 py-3 text-left w-24 col-hide-mobile">Owner</th>
             </tr>
           </thead>
           <tbody id="table-body"></tbody>
@@ -2213,17 +2237,17 @@ function renderTable() {
         </div>
         <div class="text-slate-400 text-xs mt-0.5">${icp}+${brk}</div>
       </td>
-      <td class="px-3 py-2.5 text-slate-600 w-20">${fmtEmp(r._emp)}</td>
-      <td class="px-3 py-2.5 w-32">
+      <td class="px-3 py-2.5 text-slate-600 w-20 col-hide-mobile">${fmtEmp(r._emp)}</td>
+      <td class="px-3 py-2.5 w-32 col-hide-mobile">
         ${tierBadge(r._tier)}
         <span class="ml-1 text-slate-500" title="${industry}">${industryShort}</span>
       </td>
-      <td class="px-3 py-2.5 text-slate-600 w-28">${fmtHQ(r['Headquarters'])}</td>
-      <td class="px-3 py-2.5 w-24">${stagePill(r['Last Funding Round'])}</td>
-      <td class="px-3 py-2.5 w-20">${workBadge(r._work)}</td>
-      <td class="px-3 py-2.5 w-28">${hwBadge(r._hw)}</td>
-      <td class="px-3 py-2.5 w-28">${crmBadge(r['CRM Stage'])}</td>
-      <td class="px-3 py-2.5 w-24 text-slate-500">${ownerShort}</td>
+      <td class="px-3 py-2.5 text-slate-600 w-28 col-hide-mobile">${fmtHQ(r['Headquarters'])}</td>
+      <td class="px-3 py-2.5 w-24 col-hide-mobile">${stagePill(r['Last Funding Round'])}</td>
+      <td class="px-3 py-2.5 w-20 col-hide-mobile">${workBadge(r._work)}</td>
+      <td class="px-3 py-2.5 w-28 col-hide-mobile">${hwBadge(r._hw)}</td>
+      <td class="px-3 py-2.5 w-28 col-hide-mobile">${crmBadge(r['CRM Stage'])}</td>
+      <td class="px-3 py-2.5 w-24 col-hide-mobile text-slate-500">${ownerShort}</td>
     </tr>`;
   }).join('');
 
@@ -2422,6 +2446,12 @@ function loadCSV(file) {
       applyFilters();
     }
   });
+}
+
+// ─── Mobile sidebar ───────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('main-sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────
