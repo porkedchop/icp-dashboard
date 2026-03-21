@@ -2375,19 +2375,18 @@ document.addEventListener('click', e => {
 });
 
 const EXPORT_COLS = [
-  'Rank','Company','Score','ICP_Fit','Breakout',
-  'Global_Employees','US_Employee_Pct','HQ_Location',
-  'Industry_Vertical','Funding_Stage','Valuation_USD',
-  'Work_Model','Hardware_Fleet','CRM_Stage','Account_Owner',
-  'Revenue_Growth_Pct','Score_Breakdown'
-];
-const EXPORT_HEADERS = [
-  'Rank','Company','Total Score','ICP Fit','Breakout ε',
-  'Global Employees','US Employee %','HQ Location',
-  'Industry Vertical','Funding Stage','Valuation (USD)',
+  'Rank','Company','Total Score','ICP Fit /85','Breakout ε /19',
+  'Global Employees','North America Employees (%)','Headquarters',
+  'Industry Vertical','Last Funding Round','Current Valuation',
   'Work Model','Hardware Fleet','CRM Stage','Account Owner',
-  'Revenue Growth %','Score Breakdown'
+  'Revenue Growth YoY','Employee Growth YoY','Revenue Estimate',
+  'Financial Status','Founded','Key Investors',
+  'Score: Hardware /6','Score: Employees /16','Score: Industry /16',
+  'Score: Tech Stack /14','Score: HQ /8','Score: Financial /8',
+  'Score: NA Concentration /8','Score: Office Presence /8','Score: Company Age /3',
+  'Flags','CRM Status','CRM Note'
 ];
+const EXPORT_HEADERS = EXPORT_COLS;
 
 function exportRows() {
   const rows = S.filtered && S.filtered.length ? S.filtered : S.rows;
