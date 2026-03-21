@@ -59,33 +59,23 @@ function _lockScreen() {
   document.getElementById('pw-input').focus();
 }
 
-let _hiddenAt = null;
-
 function _resetTimer() {
   clearTimeout(_activityTimer);
   _activityTimer = setTimeout(_lockScreen, _TIMEOUT_MS);
   sessionStorage.setItem('icp_auth_ts', Date.now());
 }
 
+// Lock after 15 mins away from tab; reset timer when returning
 document.addEventListener('visibilitychange', () => {
   if (sessionStorage.getItem('icp_auth') !== '1') return;
   if (document.hidden) {
-    // Tab hidden — pause by recording when we left
-    _hiddenAt = Date.now();
+    // Left tab — start fresh 15-min countdown from now
     clearTimeout(_activityTimer);
+    _activityTimer = setTimeout(_lockScreen, _TIMEOUT_MS);
+    sessionStorage.setItem('icp_auth_ts', Date.now());
   } else {
-    // Tab visible again — only count time spent hidden against the timer
-    if (_hiddenAt !== null) {
-      const elapsed = Date.now() - _hiddenAt;
-      const remaining = _TIMEOUT_MS - elapsed;
-      _hiddenAt = null;
-      if (remaining <= 0) {
-        _lockScreen();
-      } else {
-        clearTimeout(_activityTimer);
-        _activityTimer = setTimeout(_lockScreen, remaining);
-      }
-    }
+    // Returned to tab — reset timer so they get a full 15 mins again
+    _resetTimer();
   }
 });
 
