@@ -47,21 +47,54 @@
 </div>
 
 <script>
+const _TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+let _activityTimer = null;
+
+function _lockScreen() {
+  sessionStorage.removeItem('icp_auth');
+  sessionStorage.removeItem('icp_auth_ts');
+  document.getElementById('gate').style.display = 'flex';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').classList.add('hidden');
+  document.getElementById('pw-input').focus();
+}
+
+function _resetTimer() {
+  clearTimeout(_activityTimer);
+  _activityTimer = setTimeout(_lockScreen, _TIMEOUT_MS);
+  sessionStorage.setItem('icp_auth_ts', Date.now());
+}
+
 function checkPW() {
   const val = document.getElementById('pw-input').value.toLowerCase().trim();
   if (val === 'eastvillageapt@2012') {
     document.getElementById('gate').style.display = 'none';
     sessionStorage.setItem('icp_auth', '1');
+    sessionStorage.setItem('icp_auth_ts', Date.now());
+    _resetTimer();
+    ['mousemove','keydown','click','scroll','touchstart'].forEach(e =>
+      document.addEventListener(e, _resetTimer, { passive: true })
+    );
   } else {
     document.getElementById('pw-error').classList.remove('hidden');
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-input').focus();
   }
 }
+
 if (sessionStorage.getItem('icp_auth') === '1') {
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gate').style.display = 'none';
-  });
+  const ts = parseInt(sessionStorage.getItem('icp_auth_ts') || '0');
+  if (Date.now() - ts < _TIMEOUT_MS) {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gate').style.display = 'none';
+      _resetTimer();
+      ['mousemove','keydown','click','scroll','touchstart'].forEach(e =>
+        document.addEventListener(e, _resetTimer, { passive: true })
+      );
+    });
+  } else {
+    sessionStorage.removeItem('icp_auth');
+  }
 }
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('pw-input').focus();
